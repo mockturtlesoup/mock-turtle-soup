@@ -2,42 +2,70 @@ import React, { Component } from 'react';
 import Info from './Info'
 
 class Doodle extends Component {
-  isdoodling(){
-
+  constructor(...args) {
+    super(...args);
+    
+    this.state = this._readSize();
+    
+    this._doodle = this._doodle.bind(this);
+    this._resizeListener = this._resizeListener.bind(this);
   }
-  doodle(e) {
-  const canvas = document.querySelector('#draw');
-  const ctx = canvas.getContext('2d');
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  ctx.lineWidth = 400;
-    // ctx.globalCompositeOperation = 'multiply';
-  // let isDrawing = false;
-  let lastX;
-  let lastY;
-  let hue;
-  //   if (!isDrawing) return; // stop the fn from running when they are not moused down
-    // console.log(e);
-    ctx.strokeStyle=`hsl(${e.nativeEvent.offsetY/4}, 100%, 90%)`;
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
-    ctx.stroke();
-    lastX = e.nativeEvent.offsetX;
-    lastY = e.nativeEvent.offsetY;
-    console.log(lastX, lastY);
-    console.log(ctx.strokeStyle);
-    hue++;
-    if (hue >= 360) {
-      hue = 0;
+  
+  _getSize() {
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  }
+  
+  render() {
+    const {width, height} = this.state;
+    return (
+      <canvas
+        className="doodle"
+        ref={el => this._onCanvasRef(el)}
+        width={width}
+        height={height}
+        onMouseMove={this.doodle}
+        onTouchStart={this.doodle}
+      />
+    );
+  }
+  
+  _onCanvasRef(el) {
+    if (el) {
+      const ctx = el.getContext('2d');
+      this._ctx = ctx;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.lineWidth = 400;
+      ctx.beginPath();
+      // ctx.globalCompositeOperation = 'multiply';
+    } else {
+      this._ctx = null;
     }
   }
-  render() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    return (
-        <canvas className="doodle" id="draw" width={width} height={height} onMouseMove={this.doodle} onTouchStart={this.doodle}></canvas>
-    );
+
+  _doodle(e) {
+    if (!this._ctx) {
+      return;
+    }
+    const ctx = this._ctx;
+    ctx.strokeStyle=`hsl(${e.nativeEvent.offsetY/4}, 100%, 90%)`;
+    ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+    ctx.stroke();
+  }
+  
+  componentDidMount() {
+    window.addEventListener('resize', this._resizeListener);
+  }
+  
+  _resizeListener() {
+    this.setState(this._getSize());
+  }
+  
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._resizeListener);
   }
 }
 
